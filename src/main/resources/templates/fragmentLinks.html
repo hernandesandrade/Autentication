@@ -1,0 +1,16 @@
+<div th:fragment="links">
+  <ul>
+    <li><a href="/">Inicio</a></li>
+    <li><a href="/login">Login</a></li>
+    <li><a href="/publico">Publico</a></li>
+    <li><a href="/privado">Protegido 1</a></li>
+    <li><a href="/privado2">Protegido 2</a></li>
+    <li><a href="/logout">Sair</a></li>
+  </ul>
+  <br>
+  <br>
+  <br>
+  <div th:if="${user}">
+    <p>Bem-vindo, <span th:text="${userName}"></span>!</p>
+  </div>
+</div>

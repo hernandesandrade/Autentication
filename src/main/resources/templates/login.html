@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <h1>Login</h1>
+    <form action="/login" method="post">
+        <div>
+            <label>Email</label>
+            <input type="email" name="email" id="email">
+        </div>
+        <div>
+            <label>Senha</label>
+            <input type="password" name="password" id="password">
+        </div>
+        <button type="submit">Entrar</button>
+        <a href="/cadastrar">Cadastrar</a>
+    </form>
+    <div th:replace="~{fragmentLinks :: links}"></div>
+</body>
+</html>
