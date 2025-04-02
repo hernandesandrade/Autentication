@@ -2,6 +2,7 @@ package com.autentication.controllers;
 
 import com.autentication.dto.LoginRequestDTO;
 import com.autentication.dto.RegisterRequestDTO;
+import com.autentication.infra.security.RecaptchaService;
 import com.autentication.infra.security.TokenService;
 import com.autentication.models.User;
 import com.autentication.services.UserService;
@@ -20,10 +21,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
 import org.springframework.security.web.savedrequest.SavedRequest;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import java.nio.file.AccessDeniedException;
 import java.util.Collection;
 
 @Controller
@@ -82,29 +86,40 @@ public class AuthController {
         return "redirect:/cadastrar";
     }
 
+    @Autowired
+    private RecaptchaService recaptchaService;
 
     @PostMapping("/login")
-    public String logar(LoginRequestDTO loginRequestDTO, HttpServletResponse response,
-                        HttpServletRequest request) {
+    public String logar(@RequestParam("g-recaptcha-response") String recaptchaResponse, LoginRequestDTO loginRequestDTO, HttpServletResponse response,
+                        HttpServletRequest request, Model model) {
+        boolean isValidCaptcha = false;
         try {
-            User user = userService.getUserByEmail(loginRequestDTO.email());
+            isValidCaptcha = recaptchaService.verify(recaptchaResponse);
+        } catch (AccessDeniedException e) {
+            System.out.println(e.getMessage());
+            model.addAttribute("erro-recaptcha", e.getMessage());
+        }
+        if (isValidCaptcha) {
+            try {
+                User user = userService.getUserByEmail(loginRequestDTO.email());
 
-            // Gera e adiciona o token como cookie
-            String token = tokenService.generateToken(user);
-            Cookie cookie = new Cookie("auth_token", token);
-            cookie.setHttpOnly(true);
-            cookie.setPath("/");
-            response.addCookie(cookie);
-            // Recupera a URL original armazenada no RequestCache
-            SavedRequest savedRequest = requestCache.getRequest(request, response);
-            if (savedRequest != null) {
-                String redirectUrl = savedRequest.getRedirectUrl();
-                return "redirect:" + redirectUrl;
+                // Gera e adiciona o token como cookie
+                String token = tokenService.generateToken(user);
+                Cookie cookie = new Cookie("auth_token", token);
+                cookie.setHttpOnly(true);
+                cookie.setPath("/");
+                response.addCookie(cookie);
+                // Recupera a URL original armazenada no RequestCache
+                SavedRequest savedRequest = requestCache.getRequest(request, response);
+                if (savedRequest != null) {
+                    String redirectUrl = savedRequest.getRedirectUrl();
+                    return "redirect:" + redirectUrl;
+                }
+                // Redireciona para a página inicial limpa, caso não exista uma URL salva
+                return "redirect:/";
+            } catch (AuthenticationException e) {
+                System.out.println("Falha na autenticação: " + e.getMessage());
             }
-            // Redireciona para a página inicial limpa, caso não exista uma URL salva
-            return "redirect:/";
-        } catch (AuthenticationException e) {
-            System.out.println("Falha na autenticação: " + e.getMessage());
         }
         return "redirect:/login";
     }

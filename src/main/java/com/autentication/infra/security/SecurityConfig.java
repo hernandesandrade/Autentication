@@ -36,7 +36,6 @@ public class SecurityConfig {
                         .requestMatchers("/privado", "/privado2").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
-
                 .logout(logout -> logout
                         .logoutUrl("/logout") // URL para fazer logout
                         .logoutSuccessUrl("/") // Redireciona após logout
