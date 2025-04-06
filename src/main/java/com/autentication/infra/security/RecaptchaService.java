@@ -23,7 +23,7 @@ public class RecaptchaService {
     private String RECAPTCHA_VERIFY_URL;
 
     public boolean verify(String recaptchaResponse) throws AccessDeniedException {
-        if (recaptchaResponse.trim().isEmpty()){
+        if (recaptchaResponse == null || recaptchaResponse.trim().isEmpty()){
             throw new AccessDeniedException("Marque a caixa 'Eu não sou um robô'");
         }
         RestTemplate restTemplate = new RestTemplate();

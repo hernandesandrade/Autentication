@@ -2,6 +2,7 @@ package com.autentication.controllers;
 
 import com.autentication.dto.LoginRequestDTO;
 import com.autentication.dto.RegisterRequestDTO;
+import com.autentication.infra.security.LoginAttemptService;
 import com.autentication.infra.security.RecaptchaService;
 import com.autentication.infra.security.TokenService;
 import com.autentication.models.User;
@@ -89,37 +90,59 @@ public class AuthController {
     @Autowired
     private RecaptchaService recaptchaService;
 
+    @Autowired
+    private LoginAttemptService loginAttemptService;
+
     @PostMapping("/login")
-    public String logar(@RequestParam("g-recaptcha-response") String recaptchaResponse, LoginRequestDTO loginRequestDTO, HttpServletResponse response,
+    public String logar(@RequestParam(name = "g-recaptcha-response", required = false) String recaptchaResponse, LoginRequestDTO loginRequestDTO, HttpServletResponse response,
                         HttpServletRequest request, Model model) {
+
+        if (userService.getUser(request) != null) {
+            System.out.println("voce ja se encontra logado");
+            return "redirect:/";
+        }
         boolean isValidCaptcha = false;
-        try {
-            isValidCaptcha = recaptchaService.verify(recaptchaResponse);
-        } catch (AccessDeniedException e) {
-            System.out.println(e.getMessage());
-            model.addAttribute("erro-recaptcha", e.getMessage());
+        if (loginAttemptService.getAttempts(loginRequestDTO.email()) >= 3) {
+            try {
+                isValidCaptcha = recaptchaService.verify(recaptchaResponse);
+            } catch (AccessDeniedException e) {
+                System.out.println(e.getMessage());
+            }
+        }else{
+            isValidCaptcha = true;
         }
         if (isValidCaptcha) {
             try {
                 User user = userService.getUserByEmail(loginRequestDTO.email());
-
-                // Gera e adiciona o token como cookie
-                String token = tokenService.generateToken(user);
-                Cookie cookie = new Cookie("auth_token", token);
-                cookie.setHttpOnly(true);
-                cookie.setPath("/");
-                response.addCookie(cookie);
-                // Recupera a URL original armazenada no RequestCache
-                SavedRequest savedRequest = requestCache.getRequest(request, response);
-                if (savedRequest != null) {
-                    String redirectUrl = savedRequest.getRedirectUrl();
-                    return "redirect:" + redirectUrl;
+                if (passwordEncoder.matches(loginRequestDTO.password(), user.getPassword())) {
+                    // Gera e adiciona o token como cookie
+                    String token = tokenService.generateToken(user);
+                    Cookie cookie = new Cookie("auth_token", token);
+                    cookie.setHttpOnly(true);
+                    cookie.setPath("/");
+                    response.addCookie(cookie);
+                    // Recupera a URL original armazenada no RequestCache
+                    SavedRequest savedRequest = requestCache.getRequest(request, response);
+                    if (savedRequest != null) {
+                        String redirectUrl = savedRequest.getRedirectUrl();
+                        return "redirect:" + redirectUrl;
+                    }
+                    loginAttemptService.loginSucceeded(user.getEmail());
+                    // Redireciona para a página inicial limpa, caso não exista uma URL salva
+                    return "redirect:/";
+                }else{
+                    loginAttemptService.loginFailed(user.getEmail());
+                    model.addAttribute("recaptchaErros", loginAttemptService.getAttempts(user.getEmail()));
+                    System.out.println("senha invalida");
+                    System.out.println("erros: " + loginAttemptService.getAttempts(user.getEmail()));
+                    return "/login";
                 }
-                // Redireciona para a página inicial limpa, caso não exista uma URL salva
-                return "redirect:/";
             } catch (AuthenticationException e) {
                 System.out.println("Falha na autenticação: " + e.getMessage());
             }
+        }else{
+            model.addAttribute("recaptchaErros", loginAttemptService.getAttempts(loginRequestDTO.email()));
+            return "/login";
         }
         return "redirect:/login";
     }

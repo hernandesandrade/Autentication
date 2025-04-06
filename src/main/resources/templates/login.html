@@ -16,7 +16,7 @@
             <label>Senha</label>
             <input type="password" name="password" id="password">
         </div>
-        <div class="g-recaptcha" data-sitekey="6Le-BQcrAAAAALyZFnAhZjBxnK0o_ta2ilRIAlJw"></div>
+        <div th:if="${recaptchaErros >= 3}" class="g-recaptcha" data-sitekey="6Le-BQcrAAAAALyZFnAhZjBxnK0o_ta2ilRIAlJw"></div>
         <button type="submit">Entrar</button>
         <a href="/cadastrar">Cadastrar</a>
     </form>
