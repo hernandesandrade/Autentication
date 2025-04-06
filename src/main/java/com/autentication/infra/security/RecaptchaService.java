@@ -10,11 +10,15 @@ import java.nio.file.AccessDeniedException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class RecaptchaService {
 
     //LINK DO SITE RECAPTCHA: https://www.google.com/recaptcha/admin/site/721880510?hl=pt-br
+
+    private final int MAX_ATTEMPTS = 3;
+    private Map<String, Integer> attemptsCache = new ConcurrentHashMap<>();
 
     @Value("${recaptcha.secret-key}")
     private String secretKey;
@@ -39,5 +43,22 @@ public class RecaptchaService {
             throw new AccessDeniedException(response.get("error-codes").toString());
         }
         return (Boolean) response.get("success");
+    }
+
+    public void loginFailed(String key) {
+        int attempts = attemptsCache.getOrDefault(key, 0);
+        attemptsCache.put(key, attempts + 1);
+    }
+
+    public void loginSucceeded(String key) {
+        attemptsCache.remove(key);
+    }
+
+    public boolean isBlocked(String key) {
+        return attemptsCache.getOrDefault(key, 0) >= MAX_ATTEMPTS;
+    }
+
+    public int getErros(String key) {
+        return attemptsCache.getOrDefault(key, 0);
     }
 }
