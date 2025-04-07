@@ -17,7 +17,7 @@ public class RecaptchaService {
 
     //LINK DO SITE RECAPTCHA: https://www.google.com/recaptcha/admin/site/721880510?hl=pt-br
 
-    private final int MAX_ATTEMPTS = 3;
+    private final int MAX_ATTEMPTS = 1;
     private Map<String, Integer> attemptsCache = new ConcurrentHashMap<>();
 
     @Value("${recaptcha.secret-key}")

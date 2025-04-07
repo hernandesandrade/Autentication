@@ -57,6 +57,16 @@ public class SecurityConfig {
 //                            }
 //                        })
 //                )
+//                .formLogin(form -> form
+//                        .loginPage("/login")
+//                        .defaultSuccessUrl("/", true)
+//                        // Redireciona usuários logados que tentam acessar /login
+//                        .successHandler((request, response, authentication) -> {
+//                            if (authentication != null && authentication.isAuthenticated()) {
+//                                response.sendRedirect("/");
+//                            }
+//                        })
+//                )
                 .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class);
 
 

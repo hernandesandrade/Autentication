@@ -10,6 +10,8 @@ import com.autentication.utils.EmailValidator;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
@@ -25,6 +27,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.nio.file.AccessDeniedException;
 import java.util.Collection;
@@ -49,6 +52,8 @@ public class AuthController {
 
     @Autowired
     private RecaptchaService recaptchaService;
+
+    private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
 
     @GetMapping("/debug-roles")
     @ResponseBody
@@ -90,23 +95,23 @@ public class AuthController {
 
     @PostMapping("/login")
     public String logar(@RequestParam(name = "g-recaptcha-response", required = false) String recaptchaResponse, LoginRequestDTO loginRequestDTO, HttpServletResponse response,
-                        HttpServletRequest request, Model model) {
-        if (userService.getUser(request) != null) {
-            System.out.println("voce ja se encontra logado");
-            return "redirect:/";
-        }
+                        HttpServletRequest request, RedirectAttributes redirectAttributes, Model model) {
         boolean isValidCaptcha = false;
         if (recaptchaService.isBlocked(loginRequestDTO.email())) {
             try {
                 isValidCaptcha = recaptchaService.verify(recaptchaResponse);
             } catch (AccessDeniedException e) {
-                System.out.println(e.getMessage());
+                redirectAttributes.addFlashAttribute("erro", e.getMessage());
             }
         }else{
             isValidCaptcha = true;
         }
         if (isValidCaptcha) {
             try {
+                if (userService.getUser(request) != null) {
+                    redirectAttributes.addFlashAttribute("erro", "Você já se encontra logado em uma conta.");
+                    return "redirect:/login";
+                }
                 User user = userService.getUserByEmail(loginRequestDTO.email());
                 if (passwordEncoder.matches(loginRequestDTO.password(), user.getPassword())) {
 
@@ -124,18 +129,18 @@ public class AuthController {
                     return "redirect:/";
                 }else{
                     recaptchaService.loginFailed(user.getEmail());
-                    model.addAttribute("recaptchaErros", recaptchaService.getErros(user.getEmail()));
-                    System.out.println("senha invalida [" + recaptchaService.getErros(user.getEmail()) + "]");
-                    return "/login";
+                    redirectAttributes.addFlashAttribute("erro", "Senha inválida [" + recaptchaService.getErros(user.getEmail()) + "]");
+                    redirectAttributes.addFlashAttribute("recaptchaErros", recaptchaService.isBlocked(user.getEmail()));
+                    return "redirect:/login";
                 }
             } catch (AuthenticationException e) {
-                System.out.println("Falha na autenticação: " + e.getMessage());
+                redirectAttributes.addFlashAttribute("erro", "Falha na autenticação: " + e.getMessage());
             } catch (Exception e){
-                System.out.println(e.getMessage());
+                redirectAttributes.addFlashAttribute("erro", e.getMessage());
             }
         }else{
-            model.addAttribute("recaptchaErros", recaptchaService.getErros(loginRequestDTO.email()));
-            return "/login";
+            redirectAttributes.addFlashAttribute("recaptchaErros", recaptchaService.isBlocked(loginRequestDTO.email()));
+            return "redirect:/login";
         }
         return "redirect:/login";
     }
