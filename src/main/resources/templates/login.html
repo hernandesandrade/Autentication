@@ -2,7 +2,7 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Logar</title>
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     <style>
         .error-message{
@@ -21,9 +21,9 @@
         <label>Senha</label>
         <input type="password" name="password" id="password">
     </div>
-        <div class="error-message">
-            <span th:if="${erro}" th:text="${erro}"></span>
-        </div>
+    <div class="error-message">
+        <span th:if="${erro}" th:text="${erro}"></span>
+    </div>
     <div th:if="${recaptchaErros}" class="g-recaptcha"
          data-sitekey="6Le-BQcrAAAAALyZFnAhZjBxnK0o_ta2ilRIAlJw"></div>
     <button type="submit">Entrar</button>

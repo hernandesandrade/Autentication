@@ -2,28 +2,39 @@
 <html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Cadastrar</title>
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <style>
+        .error-message{
+            color: red;
+        }
+    </style>
 </head>
 <body>
 <h1>Cadastrar</h1>
 <form action="/cadastrar" method="post">
-  <div>
-    <label>Nome</label>
-    <input type="text" name="name" id="name">
-  </div>
-  <div>
-    <label>Email</label>
-    <input type="email" name="email" id="email">
-  </div>
-  <div>
-    <label>Senha</label>
-    <input type="password" name="password" id="password">
-  </div>
-  <div>
-    <label>Confirmar Senha</label>
-    <input type="password" name="confirmPassword" id="confirmPassword">
-  </div>
-  <button type="submit">Cadastrar</button>
+    <div>
+        <label>Nome</label>
+        <input type="text" name="name" id="name">
+    </div>
+    <div>
+        <label>Email</label>
+        <input type="email" name="email" id="email">
+    </div>
+    <div>
+        <label>Senha</label>
+        <input type="password" name="password" id="password">
+    </div>
+    <div>
+        <label>Confirmar Senha</label>
+        <input type="password" name="confirmPassword" id="confirmPassword">
+    </div>
+    <div class="error-message">
+        <span th:if="${erro}" th:text="${erro}"></span>
+    </div>
+    <div class="g-recaptcha"
+         data-sitekey="6Le-BQcrAAAAALyZFnAhZjBxnK0o_ta2ilRIAlJw"></div>
+    <button type="submit">Cadastrar</button>
 </form>
 <div th:replace="~{fragmentLinks :: links}"></div>
 </body>
