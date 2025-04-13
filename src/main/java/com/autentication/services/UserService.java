@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Service
@@ -44,5 +45,18 @@ public class UserService {
 
     public void saveUser(User user){
         userRepository.save(user);
+    }
+
+    public void ativarUsuario(String token) {
+        User usuario = userRepository.findByTokenConfirmacao(token)
+                .orElseThrow(() -> new RuntimeException("Token inválido"));
+
+        if (usuario.getDataExpiracaoToken().isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("Token expirado");
+        }
+
+        usuario.setAtivo(true);
+        usuario.setTokenConfirmacao(null);
+        userRepository.save(usuario);
     }
 }

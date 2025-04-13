@@ -5,6 +5,7 @@ import com.autentication.dto.RegisterRequestDTO;
 import com.autentication.infra.security.RecaptchaService;
 import com.autentication.infra.security.TokenService;
 import com.autentication.models.User;
+import com.autentication.services.EmailService;
 import com.autentication.services.UserService;
 import com.autentication.utils.EmailValidator;
 import com.autentication.utils.PasswordValidator;
@@ -31,7 +32,9 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.nio.file.AccessDeniedException;
+import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.UUID;
 
 @Controller
 public class AuthController {
@@ -53,6 +56,9 @@ public class AuthController {
 
     @Autowired
     private RecaptchaService recaptchaService;
+
+    @Autowired
+    private EmailService emailService;
 
     private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
 
@@ -88,7 +94,11 @@ public class AuthController {
                     if (registerRequestDTO.password().equals(registerRequestDTO.confirmPassword())) {
                         user = registerRequestDTO.toUser();
                         user.setPassword(passwordEncoder.encode(registerRequestDTO.password()));
+                        user.setAtivo(false);
+                        user.setTokenConfirmacao(UUID.randomUUID().toString());
+                        user.setDataExpiracaoToken(LocalDateTime.now().plusHours(24));
                         userService.saveUser(user);
+                        emailService.enviarEmailConfirmacao(user);
                         return "redirect:/login";
                     } else {
                         redirectAttributes.addFlashAttribute("erro", "A senha de confirmação está diferente");
@@ -127,24 +137,29 @@ public class AuthController {
                     return "redirect:/login";
                 }
                 User user = userService.getUserByEmail(loginRequestDTO.email());
-                if (passwordEncoder.matches(loginRequestDTO.password(), user.getPassword())) {
+                if (user.isAtivo()) {
+                    if (passwordEncoder.matches(loginRequestDTO.password(), user.getPassword())) {
 
-                    String token = tokenService.generateToken(user);
-                    Cookie cookie = new Cookie("auth_token", token);
-                    cookie.setHttpOnly(true);
-                    cookie.setPath("/");
-                    response.addCookie(cookie);
+                        String token = tokenService.generateToken(user);
+                        Cookie cookie = new Cookie("auth_token", token);
+                        cookie.setHttpOnly(true);
+                        cookie.setPath("/");
+                        response.addCookie(cookie);
 
-                    SavedRequest savedRequest = requestCache.getRequest(request, response);
-                    if (savedRequest != null) {
-                        return "redirect:" + savedRequest.getRedirectUrl();
+                        SavedRequest savedRequest = requestCache.getRequest(request, response);
+                        if (savedRequest != null) {
+                            return "redirect:" + savedRequest.getRedirectUrl();
+                        }
+                        recaptchaService.loginSucceeded(user.getEmail());
+                        return "redirect:/";
+                    } else {
+                        recaptchaService.loginFailed(user.getEmail());
+                        redirectAttributes.addFlashAttribute("erro", "Senha inválida [" + recaptchaService.getErros(user.getEmail()) + "]");
+                        redirectAttributes.addFlashAttribute("recaptchaErros", recaptchaService.isPresent(user.getEmail()));
+                        return "redirect:/login";
                     }
-                    recaptchaService.loginSucceeded(user.getEmail());
-                    return "redirect:/";
-                } else {
-                    recaptchaService.loginFailed(user.getEmail());
-                    redirectAttributes.addFlashAttribute("erro", "Senha inválida [" + recaptchaService.getErros(user.getEmail()) + "]");
-                    redirectAttributes.addFlashAttribute("recaptchaErros", recaptchaService.isPresent(user.getEmail()));
+                }else{
+                    redirectAttributes.addFlashAttribute("erro", "Email nao verificado.");
                     return "redirect:/login";
                 }
             } catch (AuthenticationException e) {

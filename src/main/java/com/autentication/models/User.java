@@ -2,6 +2,8 @@ package com.autentication.models;
 
 import jakarta.persistence.*;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "users")
 public class User {
@@ -13,6 +15,11 @@ public class User {
     private String email;
     private String password;
     private String role = "USER";
+    @Column(nullable = false)
+    private boolean ativo;
+    private String tokenConfirmacao;
+    @Column(nullable = false)
+    private LocalDateTime dataExpiracaoToken;
 
     public User(){}
 
@@ -32,6 +39,30 @@ public class User {
                 ", password='" + password + '\'' +
                 ", role='" + role + '\'' +
                 '}';
+    }
+
+    public boolean isAtivo() {
+        return ativo;
+    }
+
+    public void setAtivo(boolean ativo) {
+        this.ativo = ativo;
+    }
+
+    public String getTokenConfirmacao() {
+        return tokenConfirmacao;
+    }
+
+    public void setTokenConfirmacao(String tokenConfirmacao) {
+        this.tokenConfirmacao = tokenConfirmacao;
+    }
+
+    public LocalDateTime getDataExpiracaoToken() {
+        return dataExpiracaoToken;
+    }
+
+    public void setDataExpiracaoToken(LocalDateTime dataExpiracaoToken) {
+        this.dataExpiracaoToken = dataExpiracaoToken;
     }
 
     public String getId() {

@@ -35,7 +35,7 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED) // Permite sessões para formLogin
                 )
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/" ,"/login", "/cadastrar", "/publico").permitAll()
+                        .requestMatchers("/" ,"/login", "/cadastrar", "/publico", "/confirmar-email").permitAll()
                         .requestMatchers("/privado", "/privado2").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
