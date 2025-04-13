@@ -8,6 +8,7 @@ import com.autentication.models.User;
 import com.autentication.services.EmailService;
 import com.autentication.services.UserService;
 import com.autentication.utils.EmailValidator;
+import com.autentication.utils.NomeValidator;
 import com.autentication.utils.PasswordValidator;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -89,25 +90,29 @@ public class AuthController {
             return "redirect:/cadastrar";
         }
         if (user == null) {
-            if (EmailValidator.isValidEmail(registerRequestDTO.email())) {
-                if (PasswordValidator.isValid(registerRequestDTO.password())) {
-                    if (registerRequestDTO.password().equals(registerRequestDTO.confirmPassword())) {
-                        user = registerRequestDTO.toUser();
-                        user.setPassword(passwordEncoder.encode(registerRequestDTO.password()));
-                        user.setAtivo(false);
-                        user.setTokenConfirmacao(UUID.randomUUID().toString());
-                        user.setDataExpiracaoToken(LocalDateTime.now().plusHours(24));
-                        userService.saveUser(user);
-                        emailService.enviarEmailConfirmacao(user);
-                        return "redirect:/login";
+            if (NomeValidator.validarNome(registerRequestDTO.name())) {
+                if (EmailValidator.isValidEmail(registerRequestDTO.email())) {
+                    if (PasswordValidator.isValid(registerRequestDTO.password())) {
+                        if (registerRequestDTO.password().equals(registerRequestDTO.confirmPassword())) {
+                            user = registerRequestDTO.toUser();
+                            user.setPassword(passwordEncoder.encode(registerRequestDTO.password()));
+                            user.setAtivo(false);
+                            user.setTokenConfirmacao(UUID.randomUUID().toString());
+                            user.setDataExpiracaoToken(LocalDateTime.now().plusHours(24));
+                            userService.saveUser(user);
+                            emailService.enviarEmailConfirmacao(user);
+                            return "redirect:/login";
+                        } else {
+                            redirectAttributes.addFlashAttribute("erro", "A senha de confirmação está diferente");
+                        }
                     } else {
-                        redirectAttributes.addFlashAttribute("erro", "A senha de confirmação está diferente");
+                        redirectAttributes.addFlashAttribute("erro", "A senha deve conter pelo menos 8 caracteres, 1 letra maiúscula, 1 letra minúscula, 1 número e 1 caractere especial");
                     }
                 } else {
-                    redirectAttributes.addFlashAttribute("erro", "A senha deve conter pelo menos 8 caracteres, 1 letra maiúscula, 1 letra minúscula, 1 número e 1 caractere especial");
+                    redirectAttributes.addFlashAttribute("erro", "Formato de email inválido");
                 }
-            } else {
-                redirectAttributes.addFlashAttribute("erro", "Formato de email inválido");
+            }else{
+                redirectAttributes.addFlashAttribute("erro", "Formato de nome inválido");
             }
         } else {
             redirectAttributes.addFlashAttribute("erro", "Já existe uma conta criada com esse email");
