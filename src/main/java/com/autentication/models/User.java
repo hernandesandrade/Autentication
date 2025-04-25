@@ -17,9 +17,10 @@ public class User {
     private String role = "USER";
     @Column(nullable = false)
     private boolean ativo;
-    private String tokenConfirmacao;
-    @Column(nullable = false)
-    private LocalDateTime dataExpiracaoToken;
+    private String tokenConfirmacaoEmail;
+    private LocalDateTime tokenConfirmacaoEmailExpires;
+    private String tokenResetPassword;
+    private LocalDateTime tokenResetPasswordExpires;
 
     public User(){}
 
@@ -41,28 +42,44 @@ public class User {
                 '}';
     }
 
+    public String getTokenConfirmacaoEmail() {
+        return tokenConfirmacaoEmail;
+    }
+
+    public void setTokenConfirmacaoEmail(String tokenConfirmacaoEmail) {
+        this.tokenConfirmacaoEmail = tokenConfirmacaoEmail;
+    }
+
+    public LocalDateTime getTokenConfirmacaoEmailExpires() {
+        return tokenConfirmacaoEmailExpires;
+    }
+
+    public void setTokenConfirmacaoEmailExpires(LocalDateTime tokenConfirmacaoEmailExpires) {
+        this.tokenConfirmacaoEmailExpires = tokenConfirmacaoEmailExpires;
+    }
+
+    public String getTokenResetPassword() {
+        return tokenResetPassword;
+    }
+
+    public void setTokenResetPassword(String tokenResetPassword) {
+        this.tokenResetPassword = tokenResetPassword;
+    }
+
+    public LocalDateTime getTokenResetPasswordExpires() {
+        return tokenResetPasswordExpires;
+    }
+
+    public void setTokenResetPasswordExpires(LocalDateTime tokenResetPasswordExpires) {
+        this.tokenResetPasswordExpires = tokenResetPasswordExpires;
+    }
+
     public boolean isAtivo() {
         return ativo;
     }
 
     public void setAtivo(boolean ativo) {
         this.ativo = ativo;
-    }
-
-    public String getTokenConfirmacao() {
-        return tokenConfirmacao;
-    }
-
-    public void setTokenConfirmacao(String tokenConfirmacao) {
-        this.tokenConfirmacao = tokenConfirmacao;
-    }
-
-    public LocalDateTime getDataExpiracaoToken() {
-        return dataExpiracaoToken;
-    }
-
-    public void setDataExpiracaoToken(LocalDateTime dataExpiracaoToken) {
-        this.dataExpiracaoToken = dataExpiracaoToken;
     }
 
     public String getId() {

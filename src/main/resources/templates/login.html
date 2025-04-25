@@ -28,7 +28,10 @@
     <div th:if="${recaptchaErros}" class="g-recaptcha"
          data-sitekey="6Le-BQcrAAAAALyZFnAhZjBxnK0o_ta2ilRIAlJw"></div>
     <button type="submit">Entrar</button>
-    <a href="/cadastrar">Cadastrar</a>
+    <div>
+        <a href="/cadastrar">Cadastrar</a>
+        <a th:href="@{/forgot-password}">Esqueci minha senha</a>
+    </div>
 </form>
 <div th:replace="~{fragmentLinks :: links}"></div>
 </body>

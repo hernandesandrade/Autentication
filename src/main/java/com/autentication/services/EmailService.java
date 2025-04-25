@@ -23,7 +23,7 @@ public class EmailService {
 
     public void enviarEmailConfirmacao(User usuario) {
         String assunto = "Confirme seu cadastro";
-        String token = usuario.getTokenConfirmacao();
+        String token = usuario.getTokenConfirmacaoEmail();
         String urlConfirmacao = appUrl + "/confirmar-email?token=" + token;
 
         String mensagem = "<p>Olá " + usuario.getName() + ",</p>"

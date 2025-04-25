@@ -48,15 +48,15 @@ public class UserService {
     }
 
     public void ativarUsuario(String token) {
-        User usuario = userRepository.findByTokenConfirmacao(token)
+        User usuario = userRepository.findByTokenConfirmacaoEmail(token)
                 .orElseThrow(() -> new RuntimeException("Token inválido"));
 
-        if (usuario.getDataExpiracaoToken().isBefore(LocalDateTime.now())) {
+        if (usuario.getTokenConfirmacaoEmailExpires().isBefore(LocalDateTime.now())) {
             throw new RuntimeException("Token expirado");
         }
 
         usuario.setAtivo(true);
-        usuario.setTokenConfirmacao(null);
+        usuario.setTokenConfirmacaoEmail(null);
         userRepository.save(usuario);
     }
 }

@@ -97,8 +97,8 @@ public class AuthController {
                             user = registerRequestDTO.toUser();
                             user.setPassword(passwordEncoder.encode(registerRequestDTO.password()));
                             user.setAtivo(false);
-                            user.setTokenConfirmacao(UUID.randomUUID().toString());
-                            user.setDataExpiracaoToken(LocalDateTime.now().plusHours(24));
+                            user.setTokenConfirmacaoEmail(UUID.randomUUID().toString());
+                            user.setTokenConfirmacaoEmailExpires(LocalDateTime.now().plusHours(24));
                             userService.saveUser(user);
                             emailService.enviarEmailConfirmacao(user);
                             return "redirect:/login";
