@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Meu Perfil</title>
+</head>
+<body>
+<h1>Meu perfil</h1>
+<form action="/atualizarConta" method="post" th:object="${userDTO}">
+    <div>
+        <label>Nome</label>
+        <input type="text" id="name" th:field="*{name}">
+        <span th:if="${#fields.hasErrors('name')}" th:errors="*{name}" class="text-danger"></span>
+    </div>
+    <div>
+        <label>Email</label>
+        <input type="text" id="email" th:field="*{email}">
+        <span th:if="${emailVerificado}">Verificado</span>
+        <a href="#confirmarEmail"><span th:unless="${emailVerificado}">Verificar Email</span></a>
+        <span th:if="${#fields.hasErrors('email')}" th:errors="*{email}" class="text-danger"></span>
+    </div>
+    <div>
+        <a href="/forgot-password">Trocar senha</a>
+        <a href="/logout">Sair</a>
+    </div>
+    <button>Atualizar</button>
+</form>
+<div th:replace="~{fragmentLinks :: links}"></div>
+</body>
+</html>

@@ -111,7 +111,7 @@ public class AuthController {
                 } else {
                     redirectAttributes.addFlashAttribute("erro", "Formato de email inválido");
                 }
-            }else{
+            } else {
                 redirectAttributes.addFlashAttribute("erro", "Formato de nome inválido");
             }
         } else {
@@ -142,29 +142,24 @@ public class AuthController {
                     return "redirect:/login";
                 }
                 User user = userService.getUserByEmail(loginRequestDTO.email());
-                if (user.isAtivo()) {
-                    if (passwordEncoder.matches(loginRequestDTO.password(), user.getPassword())) {
+                if (passwordEncoder.matches(loginRequestDTO.password(), user.getPassword())) {
 
-                        String token = tokenService.generateToken(user);
-                        Cookie cookie = new Cookie("auth_token", token);
-                        cookie.setHttpOnly(true);
-                        cookie.setPath("/");
-                        response.addCookie(cookie);
+                    String token = tokenService.generateToken(user);
+                    Cookie cookie = new Cookie("auth_token", token);
+                    cookie.setHttpOnly(true);
+                    cookie.setPath("/");
+                    response.addCookie(cookie);
 
-                        SavedRequest savedRequest = requestCache.getRequest(request, response);
-                        if (savedRequest != null) {
-                            return "redirect:" + savedRequest.getRedirectUrl();
-                        }
-                        recaptchaService.loginSucceeded(user.getEmail());
-                        return "redirect:/";
-                    } else {
-                        recaptchaService.loginFailed(user.getEmail());
-                        redirectAttributes.addFlashAttribute("erro", "Senha inválida [" + recaptchaService.getErros(user.getEmail()) + "]");
-                        redirectAttributes.addFlashAttribute("recaptchaErros", recaptchaService.isPresent(user.getEmail()));
-                        return "redirect:/login";
+                    SavedRequest savedRequest = requestCache.getRequest(request, response);
+                    if (savedRequest != null) {
+                        return "redirect:" + savedRequest.getRedirectUrl();
                     }
-                }else{
-                    redirectAttributes.addFlashAttribute("erro", "Email nao verificado.");
+                    recaptchaService.loginSucceeded(user.getEmail());
+                    return "redirect:/";
+                } else {
+                    recaptchaService.loginFailed(user.getEmail());
+                    redirectAttributes.addFlashAttribute("erro", "Senha inválida [" + recaptchaService.getErros(user.getEmail()) + "]");
+                    redirectAttributes.addFlashAttribute("recaptchaErros", recaptchaService.isPresent(user.getEmail()));
                     return "redirect:/login";
                 }
             } catch (AuthenticationException e) {
@@ -197,18 +192,24 @@ public class AuthController {
     }
 
     @GetMapping("/login")
-    public String login() {
+    public String login(Authentication authentication) {
+        if (authentication != null && authentication.isAuthenticated()) {
+            return "redirect:/perfil";
+        }
         return "login";
     }
 
     @GetMapping("/cadastrar")
-    public String cadastro() {
+    public String cadastro(Authentication authentication) {
+        if (authentication != null && authentication.isAuthenticated()) {
+            return "redirect:/perfil";
+        }
         return "cadastrar";
     }
 
     @GetMapping("/logout")
     public String logout() {
-        return "redirect:";
+        return "redirect:/";
     }
 
 
