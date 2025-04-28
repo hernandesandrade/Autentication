@@ -43,6 +43,14 @@ public class UserService {
         return user.orElseThrow(() -> new UserException("Não existe um usuário com esse email"));
     }
 
+    public User getUserByEmail(String email, boolean erro) throws UserException {
+        if (erro) {
+            return getUserByEmail(email);
+        }else{
+            return userRepository.findByEmail(email).orElse(null);
+        }
+    }
+
     public void saveUser(User user){
         userRepository.save(user);
     }

@@ -34,6 +34,7 @@
     </div>
     <div class="g-recaptcha"
          data-sitekey="6Le-BQcrAAAAALyZFnAhZjBxnK0o_ta2ilRIAlJw"></div>
+    <p th:if="${erroGlobal}" th:text="${erroGlobal}" class="text-danger error-message"></p>
     <button type="submit">Cadastrar</button>
 </form>
 <div th:replace="~{fragmentLinks :: links}"></div>

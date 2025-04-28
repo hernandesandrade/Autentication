@@ -3,7 +3,6 @@ package com.autentication.controllers;
 import com.autentication.dto.LoginDTO;
 import com.autentication.dto.RegisterDTO;
 import com.autentication.exceptions.EmailException;
-import com.autentication.exceptions.RecaptchaException;
 import com.autentication.exceptions.UserException;
 import com.autentication.infra.security.RecaptchaService;
 import com.autentication.infra.security.TokenService;
@@ -14,12 +13,9 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -29,7 +25,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
@@ -59,31 +54,19 @@ public class AuthController {
     @Autowired
     private EmailService emailService;
 
-    private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
-
-    @GetMapping("/debug-roles")
-    @ResponseBody
-    public String debugRoles() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
-
-        System.out.println("Usuário autenticado: " + authentication.getName());
-        System.out.println("Authorities: " + authorities);
-
-        return "Usuário autenticado: " + authentication.getName() + "<br>Authorities: " + authorities;
-    }
-
     @PostMapping("/cadastrar")
     public String cadastrar(@RequestParam(name = "g-recaptcha-response", required = false) String recaptchaResponse, @Valid RegisterDTO registerDTO,
                             BindingResult result, HttpServletRequest request, Model model) {
         try {
             if (result.hasErrors()) {
+                recaptchaService.loginFailed(registerDTO.email());
+                model.addAttribute("recaptchaErros", recaptchaService.isPresent(registerDTO.email()));
                 return "cadastrar";
             }
-            recaptchaService.verify(recaptchaResponse);
-            User user = userService.getUserByEmail(registerDTO.email());
+            User user = userService.getUserByEmail(registerDTO.email(), false);
             if (user == null) {
                 if (registerDTO.password().equals(registerDTO.confirmPassword())) {
+                    recaptchaService.verify(recaptchaResponse);
                     user = registerDTO.toUser();
                     user.setPassword(passwordEncoder.encode(registerDTO.password()));
                     user.setAtivo(false);
@@ -93,22 +76,15 @@ public class AuthController {
                     emailService.enviarEmailConfirmacao(user);
                     return "redirect:/login";
                 } else {
-                    model.addAttribute("erro", "A senha de confirmação está diferente");
+                    enviarErro("A senha de confirmação está diferente", "confirmPassword", result, model);
                 }
             } else {
-                model.addAttribute("erro", "Já existe uma conta criada com esse email");
+                enviarErro("Já existe uma conta criada com esse email", "email", result, model);
             }
-        } catch (UserException | RecaptchaException | EmailException e) {
-            model.addAttribute("erro", e.getMessage());
+        }catch (UserException | EmailException e){
+            enviarErro(e.getMessage(), "email", result, model);
         } catch (Exception e) {
-            String referer = request.getHeader("Referer");
-            if (referer != null && !referer.isEmpty()) {
-                model.addAttribute("voltarUrl", referer);
-            }
-            model.addAttribute("error", e.getClass().getSimpleName() + " => " +
-                    e.getMessage() + " => " +
-                    e.getStackTrace()[0]);
-            return "erro";
+            model.addAttribute("erroGlobal", e.getMessage());
         }
         return "cadastrar";
     }
@@ -118,6 +94,8 @@ public class AuthController {
                         HttpServletResponse response, HttpServletRequest request, Model model) {
         try {
             if (result.hasErrors()) {
+                recaptchaService.loginFailed(loginDTO.email());
+                model.addAttribute("recaptchaErros", recaptchaService.isPresent(loginDTO.email()));
                 return "login";
             }
             if (recaptchaService.isPresent(loginDTO.email())) {
@@ -138,27 +116,24 @@ public class AuthController {
                     }
                     return "redirect:/";
                 } else {
-                    recaptchaService.loginFailed(user.getEmail());
-                    model.addAttribute("erro", "Senha inválida");
-                    model.addAttribute("recaptchaErros", recaptchaService.isPresent(user.getEmail()));
+                    enviarErro("Senha inválida", "password", result, model);
                 }
-            }else{
+            } else {
                 return "redirect:/perfil";
             }
-        } catch (RecaptchaException | UserException | AuthenticationException e) {
-            model.addAttribute("erro", e.getMessage());
-            recaptchaService.loginFailed(loginDTO.email());
+        }catch (UserException e){
+            enviarErro(e.getMessage(), "email", result, model);
         } catch (Exception e) {
-            recaptchaService.loginFailed(loginDTO.email());
-            String referer = request.getHeader("Referer");
-            if (referer != null && !referer.isEmpty()) {
-                model.addAttribute("voltarUrl", referer);
-            }
-            model.addAttribute("error", e.getMessage());
-            return "erro";
+            model.addAttribute("erroGlobal", e.getMessage());
         }
+        recaptchaService.loginFailed(loginDTO.email());
         model.addAttribute("recaptchaErros", recaptchaService.isPresent(loginDTO.email()));
         return "/login";
+    }
+
+    private void enviarErro(String mensagem, String campo, BindingResult result, Model model){
+        result.rejectValue(campo, "erro." + campo, mensagem);
+        model.addAttribute("campoErro", campo);
     }
 
     @GetMapping
@@ -200,6 +175,14 @@ public class AuthController {
     @GetMapping("/logout")
     public String logout() {
         return "redirect:/";
+    }
+
+    @GetMapping("/debug-roles")
+    @ResponseBody
+    public String debugRoles() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
+        return "Usuário autenticado: " + authentication.getName() + "<br>Authorities: " + authorities;
     }
 
 

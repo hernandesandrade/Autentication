@@ -11,12 +11,14 @@
 <form action="/login" method="post" th:object="${loginDTO}">
     <div>
         <label>Email</label>
-        <input type="text" th:field="*{email}" id="email" th:classappend="${#fields.hasErrors('email')} ? 'error'">
+        <input type="text" th:field="*{email}" id="email" th:classappend="${#fields.hasErrors('email')} or (${campoErro} == 'email') ? 'error' : ''">
         <p th:if="${#fields.hasErrors('email')}" th:errors="*{email}" class="text-danger error-message"></p>
     </div>
     <div>
         <label>Senha</label>
-        <input type="password" th:field="*{password}" id="password" th:classappend="${#fields.hasErrors('password')} ? 'error'">
+        <input type="password" th:field="*{password}"
+               th:classappend="${#fields.hasErrors('password')} or (${campoErro} == 'password') ? 'error' : ''" />
+
         <p th:if="${#fields.hasErrors('password')}" th:errors="*{password}" class="text-danger error-message"></p>
     </div>
     <div class="error-message">
@@ -25,6 +27,7 @@
     </div>
     <div th:if="${recaptchaErros}" class="g-recaptcha"
          data-sitekey="6Le-BQcrAAAAALyZFnAhZjBxnK0o_ta2ilRIAlJw"></div>
+    <p th:if="${erroGlobal}" th:text="${erroGlobal}" class="text-danger error-message"></p>
     <button type="submit">Entrar</button>
     <div>
         <a href="/cadastrar">Cadastrar</a>
