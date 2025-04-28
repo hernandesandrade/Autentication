@@ -2,6 +2,7 @@ package com.autentication.controllers;
 
 import com.autentication.dto.LoginDTO;
 import com.autentication.dto.RegisterDTO;
+import com.autentication.exceptions.EmailException;
 import com.autentication.exceptions.RecaptchaException;
 import com.autentication.exceptions.UserException;
 import com.autentication.infra.security.RecaptchaService;
@@ -74,104 +75,81 @@ public class AuthController {
 
     @PostMapping("/cadastrar")
     public String cadastrar(@RequestParam(name = "g-recaptcha-response", required = false) String recaptchaResponse, @Valid RegisterDTO registerDTO,
-                            BindingResult result, RedirectAttributes redirectAttributes, HttpServletRequest request, Model model) {
+                            BindingResult result, HttpServletRequest request, Model model) {
         try {
             if (result.hasErrors()) {
                 return "cadastrar";
             }
-            User user = null;
-            try {
-                if (recaptchaService.verify(recaptchaResponse)) {
-                    user = userService.getUserByEmail(registerDTO.email());
-                    redirectAttributes.addFlashAttribute("erro", "Já existe uma conta criada com esse email");
-                    return "redirect:/cadastrar";
-                }
-            } catch (UserException | RecaptchaException e) {
-                redirectAttributes.addFlashAttribute("erro", e.getMessage());
-                return "redirect:/cadastrar";
-            }
-            if (registerDTO.password().equals(registerDTO.confirmPassword())) {
-                user = registerDTO.toUser();
-                user.setPassword(passwordEncoder.encode(registerDTO.password()));
-                user.setAtivo(false);
-                user.setTokenConfirmacaoEmail(UUID.randomUUID().toString());
-                user.setTokenConfirmacaoEmailExpires(LocalDateTime.now().plusHours(24));
-                userService.saveUser(user);
-                try {
+            recaptchaService.verify(recaptchaResponse);
+            User user = userService.getUserByEmail(registerDTO.email());
+            if (user == null) {
+                if (registerDTO.password().equals(registerDTO.confirmPassword())) {
+                    user = registerDTO.toUser();
+                    user.setPassword(passwordEncoder.encode(registerDTO.password()));
+                    user.setAtivo(false);
+                    user.setTokenConfirmacaoEmail(UUID.randomUUID().toString());
+                    user.setTokenConfirmacaoEmailExpires(LocalDateTime.now().plusHours(24));
+                    userService.saveUser(user);
                     emailService.enviarEmailConfirmacao(user);
-                } catch (RuntimeException e) {
-                    redirectAttributes.addFlashAttribute("erro", e.getMessage());
+                    return "redirect:/login";
+                } else {
+                    model.addAttribute("erro", "A senha de confirmação está diferente");
                 }
-                return "redirect:/login";
             } else {
-                redirectAttributes.addFlashAttribute("erro", "A senha de confirmação está diferente");
+                model.addAttribute("erro", "Já existe uma conta criada com esse email");
             }
-            return "redirect:/cadastrar";
+        } catch (UserException | RecaptchaException | EmailException e) {
+            model.addAttribute("erro", e.getMessage());
         } catch (Exception e) {
             String referer = request.getHeader("Referer");
             if (referer != null && !referer.isEmpty()) {
                 model.addAttribute("voltarUrl", referer);
             }
-            model.addAttribute("error", e.getClass().getSimpleName() + "\n" +
-                    e.getMessage()+"\n"+
+            model.addAttribute("error", e.getClass().getSimpleName() + " => " +
+                    e.getMessage() + " => " +
                     e.getStackTrace()[0]);
             return "erro";
         }
+        return "cadastrar";
     }
 
     @PostMapping("/login")
-    public String logar(@RequestParam(name = "g-recaptcha-response", required = false) String recaptchaResponse, @Valid LoginDTO loginDTO, BindingResult result, HttpServletResponse response, HttpServletRequest request, RedirectAttributes redirectAttributes, Model model) {
+    public String logar(@RequestParam(name = "g-recaptcha-response", required = false) String recaptchaResponse, @Valid LoginDTO loginDTO, BindingResult result,
+                        HttpServletResponse response, HttpServletRequest request, Model model) {
         try {
             if (result.hasErrors()) {
                 return "login";
             }
-            boolean recaptchaMarcado = false;
             if (recaptchaService.isPresent(loginDTO.email())) {
-                try {
-                    if (recaptchaService.verify(recaptchaResponse)) {
-                        recaptchaMarcado = true;
-                    } else {
-                        redirectAttributes.addFlashAttribute("erro", "Clique em 'Eu não sou um robô'");
-                    }
-                } catch (RecaptchaException e) {
-                    redirectAttributes.addFlashAttribute("recaptchaErros", true);
-                    redirectAttributes.addFlashAttribute("erro", e.getMessage());
-                }
+                recaptchaService.verify(recaptchaResponse);
             }
-            if (!recaptchaService.isPresent(loginDTO.email()) || recaptchaMarcado) {
-                try {
-                    if (userService.getUser(request) != null) {
-                        return "redirect:/perfil";
+            if (userService.getUser(request) == null) {
+                User user = userService.getUserByEmail(loginDTO.email());
+                if (passwordEncoder.matches(loginDTO.password(), user.getPassword())) {
+                    String token = tokenService.generateToken(user);
+                    Cookie cookie = new Cookie("auth_token", token);
+                    cookie.setHttpOnly(true);
+                    cookie.setPath("/");
+                    response.addCookie(cookie);
+                    SavedRequest savedRequest = requestCache.getRequest(request, response);
+                    recaptchaService.loginSucceeded(user.getEmail());
+                    if (savedRequest != null) {
+                        return "redirect:" + savedRequest.getRedirectUrl();
                     }
-                    User user = userService.getUserByEmail(loginDTO.email());
-                    if (passwordEncoder.matches(loginDTO.password(), user.getPassword())) {
-
-                        String token = tokenService.generateToken(user);
-                        Cookie cookie = new Cookie("auth_token", token);
-                        cookie.setHttpOnly(true);
-                        cookie.setPath("/");
-                        response.addCookie(cookie);
-
-                        SavedRequest savedRequest = requestCache.getRequest(request, response);
-                        if (savedRequest != null) {
-                            return "redirect:" + savedRequest.getRedirectUrl();
-                        }
-                        recaptchaService.loginSucceeded(user.getEmail());
-                        return "redirect:/";
-                    } else {
-                        recaptchaService.loginFailed(user.getEmail());
-                        redirectAttributes.addFlashAttribute("erro", "Senha inválida");
-                        redirectAttributes.addFlashAttribute("recaptchaErros", recaptchaService.isPresent(user.getEmail()));
-                        return "redirect:/login";
-                    }
-                } catch (AuthenticationException e) {
-                    redirectAttributes.addFlashAttribute("erro", "Falha na autenticação: " + e.getMessage());
-                } catch (UserException e) {
-                    redirectAttributes.addFlashAttribute("erro", e.getMessage());
+                    return "redirect:/";
+                } else {
+                    recaptchaService.loginFailed(user.getEmail());
+                    model.addAttribute("erro", "Senha inválida");
+                    model.addAttribute("recaptchaErros", recaptchaService.isPresent(user.getEmail()));
                 }
+            }else{
+                return "redirect:/perfil";
             }
-            return "redirect:/login";
+        } catch (RecaptchaException | UserException | AuthenticationException e) {
+            model.addAttribute("erro", e.getMessage());
+            recaptchaService.loginFailed(loginDTO.email());
         } catch (Exception e) {
+            recaptchaService.loginFailed(loginDTO.email());
             String referer = request.getHeader("Referer");
             if (referer != null && !referer.isEmpty()) {
                 model.addAttribute("voltarUrl", referer);
@@ -179,6 +157,8 @@ public class AuthController {
             model.addAttribute("error", e.getMessage());
             return "erro";
         }
+        model.addAttribute("recaptchaErros", recaptchaService.isPresent(loginDTO.email()));
+        return "/login";
     }
 
     @GetMapping

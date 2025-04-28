@@ -3,18 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <title>Meu Perfil</title>
+    <style th:replace="~{fragmentErros :: style}"></style>
 </head>
 <body>
 <h1>Meu perfil</h1>
 <form action="/atualizarConta" method="post" th:object="${userDTO}">
     <div>
         <label>Nome</label>
-        <input type="text" id="name" th:field="*{name}">
+        <input type="text" id="name" th:field="*{name}" th:classappend="${#fields.hasErrors('name')} ? 'error'">
         <span th:if="${#fields.hasErrors('name')}" th:errors="*{name}" class="text-danger"></span>
     </div>
     <div>
         <label>Email</label>
-        <input type="text" id="email" th:field="*{email}">
+        <input type="text" id="email" th:field="*{email}" th:classappend="${#fields.hasErrors('email')} ? 'error'">
         <span th:if="${emailVerificado}">Verificado</span>
         <a href="#confirmarEmail"><span th:unless="${emailVerificado}">Verificar Email</span></a>
         <span th:if="${#fields.hasErrors('email')}" th:errors="*{email}" class="text-danger"></span>
@@ -27,4 +28,5 @@
 </form>
 <div th:replace="~{fragmentLinks :: links}"></div>
 </body>
+<script th:replace="~{fragmentErros :: inputErro}"></script>
 </html>

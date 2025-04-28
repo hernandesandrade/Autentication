@@ -1,0 +1,22 @@
+<script th:fragment="inputErro">
+  window.onload = function() {
+    var erroField = document.querySelector('.error');
+    if (erroField) {
+      erroField.focus();
+      var length = erroField.value.length;
+      erroField.setSelectionRange(length, length);
+    }
+  }
+</script>
+
+<style th:fragment="style">
+  .error-message{
+    color: red;
+  }
+  .error {
+    border: 1px solid red;
+  }
+  .error:focus {
+    outline: none; /* remove o contorno azul ou preto do navegador */
+  }
+</style>

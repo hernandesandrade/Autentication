@@ -1,5 +1,6 @@
 package com.autentication.services;
 
+import com.autentication.exceptions.EmailException;
 import com.autentication.models.User;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -21,7 +22,7 @@ public class EmailService {
     @Value("${app.url}")
     private String appUrl;
 
-    public void enviarEmailConfirmacao(User usuario) {
+    public void enviarEmailConfirmacao(User usuario) throws EmailException {
         String assunto = "Confirme seu email";
         String token = usuario.getTokenConfirmacaoEmail();
         String urlConfirmacao = appUrl + "/confirmar-email?token=" + token;
@@ -42,7 +43,7 @@ public class EmailService {
 
             mailSender.send(email);
         } catch (MessagingException e) {
-            throw new RuntimeException("Falha ao enviar email de confirmação", e);
+            throw new EmailException("Falha ao enviar email de confirmação: " + e.getMessage());
         }
     }
 

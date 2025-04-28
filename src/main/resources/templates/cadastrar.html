@@ -4,33 +4,29 @@
     <meta charset="UTF-8">
     <title>Cadastrar</title>
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
-    <style>
-        .error-message{
-            color: red;
-        }
-    </style>
+    <style th:replace="~{fragmentErros :: style}"></style>
 </head>
 <body>
 <h1>Cadastrar</h1>
 <form action="/cadastrar" method="post" th:object="${registerDTO}">
     <div>
         <label>Nome</label>
-        <input type="text" th:field="*{name}" id="name">
+        <input type="text" th:field="*{name}" id="name" th:classappend="${#fields.hasErrors('name')} ? 'error'">
         <p th:if="${#fields.hasErrors('name')}" th:errors="*{name}" class="text-danger error-message"></p>
     </div>
     <div>
         <label>Email</label>
-        <input type="text" th:field="*{email}" id="email">
+        <input type="text" th:field="*{email}" id="email" th:classappend="${#fields.hasErrors('email')} ? 'error'">
         <p th:if="${#fields.hasErrors('email')}" th:errors="*{email}" class="text-danger error-message"></p>
     </div>
     <div>
         <label>Senha</label>
-        <input type="password" th:field="*{password}" id="password">
+        <input type="password" th:field="*{password}" id="password" th:classappend="${#fields.hasErrors('password')} ? 'error'">
         <p th:if="${#fields.hasErrors('password')}" th:errors="*{password}" class="text-danger error-message"></p>
     </div>
     <div>
         <label>Confirmar Senha</label>
-        <input type="password" th:field="*{confirmPassword}" id="confirmPassword">
+        <input type="password" th:field="*{confirmPassword}" id="confirmPassword" th:classappend="${#fields.hasErrors('confirmPassword')} ? 'error'">
         <p th:if="${#fields.hasErrors('confirmPassword')}" th:errors="*{confirmPassword}" class="text-danger error-message"></p>
     </div>
     <div class="error-message">
@@ -42,4 +38,5 @@
 </form>
 <div th:replace="~{fragmentLinks :: links}"></div>
 </body>
+<script th:replace="~{fragmentErros :: inputErro}"></script>
 </html>

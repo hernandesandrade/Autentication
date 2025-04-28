@@ -4,23 +4,20 @@
     <meta charset="UTF-8">
     <title>Logar</title>
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
-    <style>
-        .error-message{
-            color: red;
-        }
-    </style>
+    <style th:replace="~{fragmentErros :: style}"></style>
 </head>
 <body>
 <h1>Login</h1>
 <form action="/login" method="post" th:object="${loginDTO}">
     <div>
         <label>Email</label>
-        <input type="text" name="email" id="email">
+        <input type="text" th:field="*{email}" id="email" th:classappend="${#fields.hasErrors('email')} ? 'error'">
         <p th:if="${#fields.hasErrors('email')}" th:errors="*{email}" class="text-danger error-message"></p>
     </div>
     <div>
         <label>Senha</label>
-        <input type="password" name="password" id="password">
+        <input type="password" th:field="*{password}" id="password" th:classappend="${#fields.hasErrors('password')} ? 'error'">
+        <p th:if="${#fields.hasErrors('password')}" th:errors="*{password}" class="text-danger error-message"></p>
     </div>
     <div class="error-message">
         <span th:if="${erro}" th:text="${erro}"></span>
@@ -36,4 +33,5 @@
 </form>
 <div th:replace="~{fragmentLinks :: links}"></div>
 </body>
+<script th:replace="~{fragmentErros :: inputErro}"></script>
 </html>
