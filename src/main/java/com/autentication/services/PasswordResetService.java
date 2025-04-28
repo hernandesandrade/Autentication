@@ -1,5 +1,6 @@
 package com.autentication.services;
 
+import com.autentication.exceptions.PasswordException;
 import com.autentication.models.User;
 import com.autentication.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,11 +46,11 @@ public class PasswordResetService {
         javaMailSender.send(email);
     }
 
-    public User validatePasswordResetToken(String token){
+    public User validatePasswordResetToken(String token) throws PasswordException{
         User user = userRepository.findByTokenResetPassword(token).orElseThrow(
-                () -> new RuntimeException("Token inválido"));
+                () -> new PasswordException("Token inválido"));
         if (user.getTokenResetPasswordExpires().isBefore(LocalDateTime.now())){
-            throw new RuntimeException("Token expirado");
+            throw new PasswordException("Token expirado");
         }
         return user;
     }

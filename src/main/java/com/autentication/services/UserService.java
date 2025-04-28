@@ -1,10 +1,10 @@
 package com.autentication.services;
 
+import com.autentication.exceptions.UserException;
 import com.autentication.infra.security.SecurityFilter;
 import com.autentication.infra.security.TokenService;
 import com.autentication.models.User;
 import com.autentication.repositories.UserRepository;
-import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -33,26 +33,26 @@ public class UserService {
         }
         return null;
     }
-    public User getUserById(String id) {
+    public User getUserById(String id) throws UserException {
         Optional<User> user = userRepository.findById(id);
-        return user.orElseThrow(() -> new RuntimeException("Não existe um usuário com esse id")); // Retorna o usuário ou null se não existir
+        return user.orElseThrow(() -> new UserException("Não existe um usuário com esse id")); // Retorna o usuário ou null se não existir
     }
 
-    public User getUserByEmail(String email) throws RuntimeException{
+    public User getUserByEmail(String email) throws UserException {
         Optional<User> user = userRepository.findByEmail(email);
-        return user.orElseThrow(() -> new RuntimeException("Não existe um usuário com esse email"));
+        return user.orElseThrow(() -> new UserException("Não existe um usuário com esse email"));
     }
 
     public void saveUser(User user){
         userRepository.save(user);
     }
 
-    public void ativarUsuario(String token) {
+    public void ativarUsuario(String token) throws UserException {
         User usuario = userRepository.findByTokenConfirmacaoEmail(token)
-                .orElseThrow(() -> new RuntimeException("Token inválido"));
+                .orElseThrow(() -> new UserException("Token inválido"));
 
         if (usuario.getTokenConfirmacaoEmailExpires().isBefore(LocalDateTime.now())) {
-            throw new RuntimeException("Token expirado");
+            throw new UserException("Token expirado");
         }
 
         usuario.setAtivo(true);

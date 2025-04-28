@@ -1,5 +1,6 @@
 package com.autentication.infra.security;
 
+import com.autentication.exceptions.RecaptchaException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
@@ -26,9 +27,9 @@ public class RecaptchaService {
     @Value("${recaptcha.verify-url}")
     private String RECAPTCHA_VERIFY_URL;
 
-    public boolean verify(String recaptchaResponse) throws AccessDeniedException {
+    public boolean verify(String recaptchaResponse) throws RecaptchaException {
         if (recaptchaResponse == null || recaptchaResponse.trim().isEmpty()){
-            throw new AccessDeniedException("Marque a caixa 'Eu não sou um robô'");
+            throw new RecaptchaException("Marque a caixa 'Eu não sou um robô'");
         }
         RestTemplate restTemplate = new RestTemplate();
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
@@ -37,10 +38,10 @@ public class RecaptchaService {
 
         Map response = restTemplate.postForObject(RECAPTCHA_VERIFY_URL, params, Map.class);
         if (response == null) {
-            throw new AccessDeniedException("O servidor reCAPTCHA retornou response vazio");
+            throw new RecaptchaException("O servidor reCAPTCHA retornou response vazio");
         }
         if (response.containsKey("error-codes")){
-            throw new AccessDeniedException(response.get("error-codes").toString());
+            throw new RecaptchaException(response.get("error-codes").toString());
         }
         return (Boolean) response.get("success");
     }

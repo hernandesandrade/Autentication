@@ -1,5 +1,6 @@
 package com.autentication.controllers;
 
+import com.autentication.exceptions.UserException;
 import com.autentication.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -18,7 +19,7 @@ public class LinkConfirmacao {
         try {
             userService.ativarUsuario(token);
             model.addAttribute("mensagem", "Email confirmado com sucesso! Agora você pode fazer login.");
-        } catch (RuntimeException e) {
+        } catch (UserException e) {
             model.addAttribute("erro", e.getMessage());
         }
         return "confirmacao";

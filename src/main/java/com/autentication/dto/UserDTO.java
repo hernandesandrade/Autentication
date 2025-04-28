@@ -1,33 +1,28 @@
 package com.autentication.dto;
 
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import com.autentication.validation.EmailValido;
+import com.autentication.validation.NomeValido;
 
 public class UserDTO {
 
-    @NotNull(message = "Campo vazio")
-    @NotBlank(message = "Campo em branco")
+    @NomeValido
     private String name;
-
-    @NotNull(message = "Campo vazio")
-    @NotBlank(message = "Campo em branco")
-    @Email(message = "Email invalido..")
+    @EmailValido
     private String email;
 
-    public @NotNull(message = "Campo vazio") @NotBlank(message = "Campo em branco") String getName() {
+    public String getName() {
         return name;
     }
 
-    public void setName(@NotNull(message = "Campo vazio") @NotBlank(message = "Campo em branco") String name) {
+    public void setName(String name) {
         this.name = name;
     }
 
-    public @NotNull(message = "Campo vazio") @NotBlank(message = "Campo em branco") @Email(message = "Email invalido..") String getEmail() {
+    public String getEmail() {
         return email;
     }
 
-    public void setEmail(@NotNull(message = "Campo vazio") @NotBlank(message = "Campo em branco") @Email(message = "Email invalido..") String email) {
+    public void setEmail(String email) {
         this.email = email;
     }
 }

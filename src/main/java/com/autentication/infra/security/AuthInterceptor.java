@@ -1,5 +1,6 @@
 package com.autentication.infra.security;
 
+import com.autentication.exceptions.UserException;
 import com.autentication.models.User;
 import com.autentication.services.UserService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -28,7 +29,7 @@ public class AuthInterceptor implements HandlerInterceptor {
         }
     }
 
-    private void checkAuth(ModelAndView model, HttpServletRequest request) {
+    private void checkAuth(ModelAndView model, HttpServletRequest request) throws UserException {
         String token = securityFilter.extractTokenFromCookies(request);
         if (token != null) {
             String email = tokenService.validateToken(token);

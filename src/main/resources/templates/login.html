@@ -12,10 +12,11 @@
 </head>
 <body>
 <h1>Login</h1>
-<form action="/login" method="post">
+<form action="/login" method="post" th:object="${loginDTO}">
     <div>
         <label>Email</label>
-        <input type="email" name="email" id="email">
+        <input type="text" name="email" id="email">
+        <p th:if="${#fields.hasErrors('email')}" th:errors="*{email}" class="text-danger error-message"></p>
     </div>
     <div>
         <label>Senha</label>

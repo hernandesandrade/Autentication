@@ -22,7 +22,7 @@ public class EmailService {
     private String appUrl;
 
     public void enviarEmailConfirmacao(User usuario) {
-        String assunto = "Confirme seu cadastro";
+        String assunto = "Confirme seu email";
         String token = usuario.getTokenConfirmacaoEmail();
         String urlConfirmacao = appUrl + "/confirmar-email?token=" + token;
 
@@ -46,5 +46,4 @@ public class EmailService {
         }
     }
 
-    // Método similar para recuperação de senha
 }

@@ -1,8 +1,10 @@
 package com.autentication.controllers;
 
 import com.autentication.dto.UserDTO;
+import com.autentication.exceptions.UserException;
 import com.autentication.models.User;
 import com.autentication.services.UserService;
+import com.autentication.utils.UserNameFormatter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -21,33 +23,31 @@ public class PerfilController {
     private UserService userService;
 
     @GetMapping("/perfil")
-    public String perfil(@ModelAttribute("userDTO") UserDTO userDTO, Model model, HttpServletRequest request){
-        try {
-            User user = userService.getUser(request);
+    public String perfil(@ModelAttribute("userDTO") UserDTO userDTO, Model model, HttpServletRequest request) {
+        User user = userService.getUser(request);
+        if (user != null) {
             userDTO.setEmail(user.getEmail());
             userDTO.setName(user.getName());
             model.addAttribute("emailVerificado", user.isAtivo());
-        } catch (Exception e) {
-            System.out.println("Usuario nao encontrado ou nao conectado.");
+            return "perfil";
+        } else {
+            return "redirect:/logout";
         }
-        return "perfil";
     }
 
     @PostMapping("/atualizarConta")
-    public String atualizarPerfil(@Valid UserDTO userDTO, BindingResult bindingResult, Model model, HttpServletRequest request){
-        try {
-            if (bindingResult.hasErrors()) {
-                return "perfil";
-            }
-            User user = userService.getUser(request);
-            user.setEmail(userDTO.getEmail());
-            user.setName(userDTO.getName());
-            userService.saveUser(user);
-            System.out.println("Conta " + user.getId() + " atualizada.");
-            return "inicio";
-        } catch (Exception e) {
-            model.addAttribute("erro", e.getMessage());
+    public String atualizarPerfil(@Valid UserDTO userDTO, BindingResult bindingResult, Model model, HttpServletRequest request) {
+        if (bindingResult.hasErrors()) {
             return "perfil";
+        }
+        User user = userService.getUser(request);
+        if (user != null) {
+            user.setEmail(userDTO.getEmail());
+            user.setName(UserNameFormatter.formatar(userDTO.getName()));
+            userService.saveUser(user);
+            return "perfil";
+        } else {
+            return "redirect:/logout";
         }
     }
 
