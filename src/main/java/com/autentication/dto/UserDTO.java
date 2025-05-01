@@ -10,6 +10,14 @@ public class UserDTO {
     @EmailValido
     private String email;
 
+    private Boolean ativo;
+
+    public UserDTO(String name, String email, Boolean ativo) {
+        this.name = name;
+        this.email = email;
+        this.ativo = ativo;
+    }
+
     public String getName() {
         return name;
     }
@@ -24,5 +32,13 @@ public class UserDTO {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public Boolean isAtivo() {
+        return ativo;
+    }
+
+    public void setAtivo(Boolean ativo) {
+        this.ativo = ativo;
     }
 }

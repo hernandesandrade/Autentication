@@ -24,11 +24,11 @@ public class PerfilController {
 
     @GetMapping("/perfil")
     public String perfil(@ModelAttribute("userDTO") UserDTO userDTO, Model model, HttpServletRequest request) {
-        User user = userService.getUser(request);
+        UserDTO user = userService.getUserSession(request);
         if (user != null) {
-            userDTO.setEmail(user.getEmail());
             userDTO.setName(user.getName());
-            model.addAttribute("emailVerificado", user.isAtivo());
+            userDTO.setEmail(user.getEmail());
+            userDTO.setAtivo(user.isAtivo());
             return "perfil";
         } else {
             return "redirect:/logout";
@@ -42,10 +42,9 @@ public class PerfilController {
         }
         User user = userService.getUser(request);
         if (user != null) {
-            user.setEmail(userDTO.getEmail());
             user.setName(UserNameFormatter.formatar(userDTO.getName()));
-            userService.saveUser(user);
-            return "perfil";
+            userService.atualizarUser(user, request);
+            return "redirect:/perfil";
         } else {
             return "redirect:/logout";
         }

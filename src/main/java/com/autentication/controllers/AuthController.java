@@ -2,21 +2,21 @@ package com.autentication.controllers;
 
 import com.autentication.dto.LoginDTO;
 import com.autentication.dto.RegisterDTO;
+import com.autentication.dto.UserDTO;
 import com.autentication.exceptions.EmailException;
 import com.autentication.exceptions.UserException;
 import com.autentication.infra.security.RecaptchaService;
 import com.autentication.infra.security.TokenService;
 import com.autentication.models.User;
-import com.autentication.services.EmailService;
 import com.autentication.services.UserService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
@@ -26,9 +26,7 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.UUID;
+import java.util.Collections;
 
 @Controller
 public class AuthController {
@@ -38,21 +36,15 @@ public class AuthController {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
-    //
-    @Autowired
-    private TokenService tokenService;
 
     @Autowired
-    private AuthenticationManager authenticationManager;
+    private TokenService tokenService;
 
     @Autowired
     private HttpSessionRequestCache requestCache;
 
     @Autowired
     private RecaptchaService recaptchaService;
-
-    @Autowired
-    private EmailService emailService;
 
     @PostMapping("/cadastrar")
     public String cadastrar(@RequestParam(name = "g-recaptcha-response", required = false) String recaptchaResponse, @Valid RegisterDTO registerDTO,
@@ -63,17 +55,10 @@ public class AuthController {
                 model.addAttribute("recaptchaErros", recaptchaService.isPresent(registerDTO.email()));
                 return "cadastrar";
             }
-            User user = userService.getUserByEmail(registerDTO.email(), false);
-            if (user == null) {
+            if (userService.getUserByEmail(registerDTO.email(), false) == null) {
                 if (registerDTO.password().equals(registerDTO.confirmPassword())) {
                     recaptchaService.verify(recaptchaResponse);
-                    user = registerDTO.toUser();
-                    user.setPassword(passwordEncoder.encode(registerDTO.password()));
-                    user.setAtivo(false);
-                    user.setTokenConfirmacaoEmail(UUID.randomUUID().toString());
-                    user.setTokenConfirmacaoEmailExpires(LocalDateTime.now().plusHours(24));
-                    userService.saveUser(user);
-                    emailService.enviarEmailConfirmacao(user);
+                    userService.cadastrarUser(registerDTO);
                     return "redirect:/login";
                 } else {
                     enviarErro("A senha de confirmação está diferente", "confirmPassword", result, model);
@@ -81,7 +66,7 @@ public class AuthController {
             } else {
                 enviarErro("Já existe uma conta criada com esse email", "email", result, model);
             }
-        }catch (UserException | EmailException e){
+        } catch (UserException | EmailException e) {
             enviarErro(e.getMessage(), "email", result, model);
         } catch (Exception e) {
             model.addAttribute("erroGlobal", e.getMessage());
@@ -101,9 +86,10 @@ public class AuthController {
             if (recaptchaService.isPresent(loginDTO.email())) {
                 recaptchaService.verify(recaptchaResponse);
             }
-            if (userService.getUser(request) == null) {
+            if (userService.getUserSession(request) == null) {
                 User user = userService.getUserByEmail(loginDTO.email());
                 if (passwordEncoder.matches(loginDTO.password(), user.getPassword())) {
+                    request.getSession().setAttribute("userLogado", new UserDTO(user.getName(), user.getEmail(), user.isAtivo()));
                     String token = tokenService.generateToken(user);
                     Cookie cookie = new Cookie("auth_token", token);
                     cookie.setHttpOnly(true);
@@ -121,17 +107,17 @@ public class AuthController {
             } else {
                 return "redirect:/perfil";
             }
-        }catch (UserException e){
+        } catch (UserException e) {
             enviarErro(e.getMessage(), "email", result, model);
         } catch (Exception e) {
             model.addAttribute("erroGlobal", e.getMessage());
         }
         recaptchaService.loginFailed(loginDTO.email());
         model.addAttribute("recaptchaErros", recaptchaService.isPresent(loginDTO.email()));
-        return "/login";
+        return "login";
     }
 
-    private void enviarErro(String mensagem, String campo, BindingResult result, Model model){
+    private void enviarErro(String mensagem, String campo, BindingResult result, Model model) {
         result.rejectValue(campo, "erro." + campo, mensagem);
         model.addAttribute("campoErro", campo);
     }
@@ -173,10 +159,11 @@ public class AuthController {
     }
 
     @GetMapping("/logout")
-    public String logout() {
+    public String logout(HttpServletRequest request) {
         return "redirect:/";
     }
 
+/*
     @GetMapping("/debug-roles")
     @ResponseBody
     public String debugRoles() {
@@ -184,7 +171,7 @@ public class AuthController {
         Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
         return "Usuário autenticado: " + authentication.getName() + "<br>Authorities: " + authorities;
     }
-
+*/
 
 }
 

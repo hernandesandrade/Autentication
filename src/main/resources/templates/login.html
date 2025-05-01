@@ -8,7 +8,7 @@
 </head>
 <body>
 <h1>Login</h1>
-<form action="/login" method="post" th:object="${loginDTO}">
+<form th:action="@{/login}" method="post" th:object="${loginDTO}">
     <div>
         <label>Email</label>
         <input type="text" th:field="*{email}" id="email" th:classappend="${#fields.hasErrors('email')} or (${campoErro} == 'email') ? 'error' : ''">

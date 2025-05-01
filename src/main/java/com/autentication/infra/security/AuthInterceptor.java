@@ -1,6 +1,5 @@
 package com.autentication.infra.security;
 
-import com.autentication.exceptions.UserException;
 import com.autentication.models.User;
 import com.autentication.services.UserService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,30 +15,16 @@ public class AuthInterceptor implements HandlerInterceptor {
     @Autowired
     private UserService userService;
 
-    @Autowired
-    private TokenService tokenService;
-
-    @Autowired
-    private SecurityFilter securityFilter;
-
     @Override
     public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView mv) throws Exception {
-        if (mv != null && mv.getViewName() != null && !mv.getViewName().startsWith("redirect:")) {
-            checkAuth(mv, request);
-        }
+//        User user = userService.getUser(request);
+//        if (user != null && mv != null) {
+//            addUserName(user, mv);
+//        }
     }
 
-    private void checkAuth(ModelAndView model, HttpServletRequest request) throws UserException {
-        String token = securityFilter.extractTokenFromCookies(request);
-        if (token != null) {
-            String email = tokenService.validateToken(token);
-            if (email != null) {
-                User user = userService.getUserByEmail(email);
-                    model.addObject("userName", user.getName().split(" ")[0]);
-                    model.addObject("user", user);
-                    model.addObject("role", user.getRole());
-            }
-        }
-    }
+//    private void addUserName(User user, ModelAndView mv){
+//        mv.addObject("userName", user.getName().split(" ")[0]);
+//    }
 }
 

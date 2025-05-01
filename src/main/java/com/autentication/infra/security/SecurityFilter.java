@@ -1,5 +1,6 @@
 package com.autentication.infra.security;
 
+import com.autentication.dto.UserDTO;
 import com.autentication.models.User;
 import com.autentication.repositories.UserRepository;
 import com.autentication.services.UserService;
@@ -36,10 +37,10 @@ public class SecurityFilter extends OncePerRequestFilter {
             String email = tokenService.validateToken(token);
             if (email != null) {
                 if (SecurityContextHolder.getContext().getAuthentication() == null) {
-                    // Execute a lógica de autenticação
                     Optional<User> userOptional = userRepository.findByEmail(email);
                     if (userOptional.isPresent()) {
                         User user = userOptional.get();
+                        request.getSession().setAttribute("userLogado", new UserDTO(user.getName(), user.getEmail(), user.isAtivo()));
                         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                                 user.getEmail(),
                                 null,
@@ -47,7 +48,12 @@ public class SecurityFilter extends OncePerRequestFilter {
                         );
                         SecurityContextHolder.getContext().setAuthentication(authentication);
                     }
-                        // Autenticar o usuário no contexto de segurança
+
+                }
+            }else{
+                Object sessionUser = request.getSession().getAttribute("userLogado");
+                if (sessionUser != null){
+                    request.getSession().removeAttribute("userLogado");
                 }
             }
         }
@@ -64,12 +70,6 @@ public class SecurityFilter extends OncePerRequestFilter {
             }
         }
         return null;
-    }
-
-    private String recoverToken(HttpServletRequest request){
-        var authHeader = request.getHeader("Authorization");
-        if (authHeader == null) return null;
-        return authHeader.replace("Bearer ", "");
     }
 
 }
