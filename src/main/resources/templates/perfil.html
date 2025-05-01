@@ -15,18 +15,42 @@
     </div>
     <div>
         <label>Email</label>
-        <input type="text" id="email" th:field="*{email}" th:classappend="${#fields.hasErrors('email')} ? 'error'">
-        <span th:if="${emailVerificado}">Verificado</span>
-        <a href="#confirmarEmail"><span th:unless="${emailVerificado}">Verificar Email</span></a>
+        <input type="text" id="email" th:field="*{email}" th:classappend="${#fields.hasErrors('email')} ? 'error'" readonly>
+        <span th:if="${session.userLogado.ativo}">Verificado</span>
+        <a href="#confirmarEmail"><span th:unless="${session.userLogado.ativo}">Verificar Email</span></a>
         <span th:if="${#fields.hasErrors('email')}" th:errors="*{email}" class="text-danger"></span>
     </div>
     <div>
         <a href="/forgot-password">Trocar senha</a>
         <a href="/logout">Sair</a>
     </div>
-    <button>Atualizar</button>
+    <button id="botaoEnviar">Atualizar</button>
 </form>
 <div th:replace="~{fragmentLinks :: links}"></div>
 </body>
 <script th:replace="~{fragmentErros :: inputErro}"></script>
+<script th:inline="javascript">
+    document.addEventListener('DOMContentLoaded', function () {
+        const userName = /*[[${session.userLogado.name}]]*/ 'valor padrão';
+        const inputNome = document.getElementById('name');
+        const botaoEnviar = document.getElementById('botaoEnviar');
+
+        function verificarNome() {
+            const valorInput = inputNome.value;
+            const valorEsperado = userName;
+
+            if (valorInput === valorEsperado) {
+                botaoEnviar.disabled = true;
+            } else {
+                botaoEnviar.disabled = false;
+            }
+        }
+
+        // Verifica já no início
+        verificarNome();
+
+        // Verifica sempre que o usuário digita
+        inputNome.addEventListener('input', verificarNome);
+    });
+</script>
 </html>
