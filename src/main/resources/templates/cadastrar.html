@@ -8,7 +8,7 @@
 </head>
 <body>
 <h1>Cadastrar</h1>
-<form action="/cadastrar" method="post" th:object="${registerDTO}">
+<form th:action="@{/cadastrar}" method="post" th:object="${registerDTO}">
     <div>
         <label>Nome</label>
         <input type="text" th:field="*{name}" id="name" th:classappend="${#fields.hasErrors('name')} ? 'error'">
