@@ -1,0 +1,23 @@
+<!-- src/main/resources/templates/form.html -->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>Teste CSRF</title>
+</head>
+<body>
+<h1>Transferência Bancária (Simulação)</h1>
+
+<!-- Formulário LEGÍTIMO -->
+<form method="POST" th:action="@{/transfer}">
+  <input type="number" name="amount" placeholder="Valor">
+  <button type="submit">Transferir (Seguro)</button>
+</form>
+
+<!-- Formulário MALICIOSO (simulado) -->
+<h3>Simulação de Ataque CSRF:</h3>
+<form method="POST" action="http://localhost:8080/transfer">
+  <input type="hidden" name="amount" value="1000">
+  <button type="submit">Clique aqui para ganhar um prêmio! (Inseguro)</button>
+</form>
+</body>
+</html>

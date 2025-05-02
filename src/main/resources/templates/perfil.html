@@ -7,7 +7,7 @@
 </head>
 <body>
 <h1>Meu perfil</h1>
-<form action="/atualizarConta" method="post" th:object="${userDTO}">
+<form th:action="@{http://localhost:8080/atualizarConta}" method="post" th:object="${userDTO}">
     <div>
         <label>Nome</label>
         <input type="text" id="name" th:field="*{name}" th:classappend="${#fields.hasErrors('name')} ? 'error'">

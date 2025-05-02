@@ -29,8 +29,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 //desativar "CSRF protection" se esse sistema for uma api ".csrf(AbstractHttpConfigurer::disable)"
-                //ativar se for um projeto unico com thymeleaf
-                .csrf(AbstractHttpConfigurer::disable)
+                //ativar se for um projeto unico com thymeleaf (basta excluir)
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED) // Permite sessões para formLogin
                 )
