@@ -22,9 +22,12 @@
     </div>
     <div>
         <a href="/forgot-password">Trocar senha</a>
-        <a href="/logout">Sair</a>
     </div>
     <button id="botaoEnviar">Atualizar</button>
+</form>
+<form th:action="@{/logout}" method="post">
+    <button type="submit">Sair</button>
+    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
 </form>
 <div th:replace="~{fragmentLinks :: links}"></div>
 </body>

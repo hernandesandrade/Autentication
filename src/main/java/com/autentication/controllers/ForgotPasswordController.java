@@ -41,15 +41,12 @@ public class ForgotPasswordController {
             return "forgot-password";
         }
         try {
-            if (recaptchaService.verify(recaptchaResponse)){
-                User user = userService.getUserByEmail(emailDTO.email());
-                String token = UUID.randomUUID().toString();
-                passwordResetService.createPasswordResetForUser(user, token);
-                passwordResetService.sendEmailResetPassword(user, token);
-                model.addAttribute("message", "Se o email existir em nosso sistema, enviaremos uim link de redefinição");
-            }else{
-                model.addAttribute("erro", "Marque a caixa 'Eu não sou um robÔ'");
-            }
+            recaptchaService.verify(recaptchaResponse);
+            User user = userService.getUserByEmail(emailDTO.email());
+            String token = UUID.randomUUID().toString();
+            passwordResetService.createPasswordResetForUser(user, token);
+            passwordResetService.sendEmailResetPassword(user, token);
+            model.addAttribute("message", "Link de redefinição de senha enviado para seu email!");
         } catch (RecaptchaException | UserException e) {
             model.addAttribute("erro", e.getMessage());
         }

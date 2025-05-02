@@ -6,7 +6,10 @@
         <li><a href="/privado">Protegido 1</a></li>
         <li><a href="/privado2">Protegido 2</a></li>
         <li><a href="/perfil">Meu perfil</a></li>
-        <li><a href="/logout">Sair</a></li>
+        <li><form th:action="@{/logout}" method="post">
+            <button type="submit">Sair</button>
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+        </form></li>
     </ul>
     <br>
     <br>
