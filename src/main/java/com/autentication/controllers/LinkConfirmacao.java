@@ -2,6 +2,7 @@ package com.autentication.controllers;
 
 import com.autentication.exceptions.UserException;
 import com.autentication.services.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -15,9 +16,9 @@ public class LinkConfirmacao {
     private UserService userService;
 
     @GetMapping("/confirmar-email")
-    public String confirmarEmail(@RequestParam String token, Model model) {
+    public String confirmarEmail(@RequestParam String token, Model model, HttpServletRequest request) {
         try {
-            userService.ativarUsuario(token);
+            userService.ativarUsuario(token, request);
             model.addAttribute("mensagem", "Email confirmado com sucesso! Agora você pode fazer login.");
         } catch (UserException e) {
             model.addAttribute("erro", e.getMessage());

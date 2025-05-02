@@ -85,19 +85,21 @@ public class UserService {
 
     public void atualizarUser(User user, HttpServletRequest request){
         userRepository.save(user);
-        request.getSession().setAttribute("userLogado", new UserDTO(user.getName(), user.getEmail(), user.isAtivo()));
+        if (request.getSession().getAttribute("userLogado") != null) {
+            request.getSession().setAttribute("userLogado", new UserDTO(user.getName(), user.getEmail(), user.isAtivo()));
+        }
     }
 
-    public void ativarUsuario(String token) throws UserException {
-        User usuario = userRepository.findByTokenConfirmacaoEmail(token)
+    public void ativarUsuario(String token, HttpServletRequest request) throws UserException {
+        User user = userRepository.findByTokenConfirmacaoEmail(token)
                 .orElseThrow(() -> new UserException("Token inválido"));
 
-        if (usuario.getTokenConfirmacaoEmailExpires().isBefore(LocalDateTime.now())) {
+        if (user.getTokenConfirmacaoEmailExpires().isBefore(LocalDateTime.now())) {
             throw new UserException("Token expirado");
         }
 
-        usuario.setAtivo(true);
-        usuario.setTokenConfirmacaoEmail(null);
-        userRepository.save(usuario);
+        user.setAtivo(true);
+        user.setTokenConfirmacaoEmail(null);
+        atualizarUser(user, request);
     }
 }

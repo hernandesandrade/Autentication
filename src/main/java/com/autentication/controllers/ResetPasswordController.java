@@ -4,8 +4,8 @@ import com.autentication.dto.PasswordDTO;
 import com.autentication.dto.RegisterDTO;
 import com.autentication.exceptions.PasswordException;
 import com.autentication.models.User;
-import com.autentication.repositories.UserRepository;
 import com.autentication.services.PasswordResetService;
+import com.autentication.services.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.*;
 public class ResetPasswordController {
 
     @Autowired
-    private UserRepository userRepository;
+    private UserService userService;
 
     @Autowired
     private PasswordResetService passwordResetService;
@@ -51,7 +51,7 @@ public class ResetPasswordController {
                 user.setPassword(passwordEncoder.encode(passwordDTO.password()));
                 user.setTokenResetPassword(null);
                 user.setTokenResetPasswordExpires(null);
-                userRepository.save(user);
+                userService.saveUser(user);
                 return "redirect:/login";
             }else{
                 model.addAttribute("erro", "A senha de confirmação está diferente");
