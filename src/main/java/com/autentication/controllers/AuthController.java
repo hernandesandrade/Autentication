@@ -51,8 +51,8 @@ public class AuthController {
                             BindingResult result, HttpServletRequest request, Model model) {
         try {
             if (result.hasErrors()) {
-                recaptchaService.loginFailed(registerDTO.email());
-                model.addAttribute("recaptchaErros", recaptchaService.isPresent(registerDTO.email()));
+                recaptchaService.loginFailed(request, registerDTO.email());
+                model.addAttribute("recaptchaErros", recaptchaService.isPresent(request, registerDTO.email()));
                 return "cadastrar";
             }
             if (userService.getUserByEmail(registerDTO.email(), false) == null) {
@@ -79,11 +79,11 @@ public class AuthController {
                         HttpServletResponse response, HttpServletRequest request, Model model) {
         try {
             if (result.hasErrors()) {
-                recaptchaService.loginFailed(loginDTO.email());
-                model.addAttribute("recaptchaErros", recaptchaService.isPresent(loginDTO.email()));
+                recaptchaService.loginFailed(request, loginDTO.email());
+                model.addAttribute("recaptchaErros", recaptchaService.isPresent(request, loginDTO.email()));
                 return "login";
             }
-            if (recaptchaService.isPresent(loginDTO.email())) {
+            if (recaptchaService.isPresent(request, loginDTO.email())) {
                 recaptchaService.verify(recaptchaResponse);
             }
             if (userService.getUserSession(request) == null) {
@@ -96,7 +96,7 @@ public class AuthController {
                     cookie.setPath("/");
                     response.addCookie(cookie);
                     SavedRequest savedRequest = requestCache.getRequest(request, response);
-                    recaptchaService.loginSucceeded(user.getEmail());
+                    recaptchaService.loginSucceeded(request, user.getEmail());
                     if (savedRequest != null) {
                         return "redirect:" + savedRequest.getRedirectUrl();
                     }
@@ -112,8 +112,8 @@ public class AuthController {
         } catch (Exception e) {
             model.addAttribute("erroGlobal", e.getMessage());
         }
-        recaptchaService.loginFailed(loginDTO.email());
-        model.addAttribute("recaptchaErros", recaptchaService.isPresent(loginDTO.email()));
+        recaptchaService.loginFailed(request, loginDTO.email());
+        model.addAttribute("recaptchaErros", recaptchaService.isPresent(request, loginDTO.email()));
         return "login";
     }
 
