@@ -56,22 +56,12 @@ public class RecaptchaService {
     }
 
     public void loginFailed(HttpServletRequest request, String email) {
-
         int attempts = Optional.ofNullable(attemptsCache.getIfPresent(email + "::" + getClientIp(request))).orElse(0) + 1;
         attemptsCache.put(email + "::" + getClientIp(request), attempts);
-        System.out.println("[LOGIN FALHOU] Usuário: " + email + "::" + getClientIp(request));
-        System.out.println("→ Tentativas atuais: " + attempts);
-        System.out.println("→ Cache atual:");
-
-        Map<String, Integer> snapshot = attemptsCache.asMap();
-        for (Map.Entry<String, Integer> entry : snapshot.entrySet()) {
-            System.out.println(" - " + entry.getKey() + ": " + entry.getValue() + " tentativa(s)");
-        }
     }
 
     public void loginSucceeded(HttpServletRequest request, String email) {
         attemptsCache.invalidate(email + "::" + getClientIp(request));
-        System.out.println("[LOGIN BEM-SUCEDIDO] Cache limpo para: " + email + "::" + getClientIp(request));
     }
 
     public boolean isPresent(HttpServletRequest request, String email) {
