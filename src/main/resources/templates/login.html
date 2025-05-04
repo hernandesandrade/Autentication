@@ -11,13 +11,14 @@
 <form th:action="@{/login}" method="post" th:object="${loginDTO}">
     <div>
         <label>Email</label>
-        <input type="text" th:field="*{email}" id="email" th:classappend="${#fields.hasErrors('email')} or (${campoErro} == 'email') ? 'error' : ''">
+        <input type="text" th:field="*{email}" id="email"
+               th:classappend="${#fields.hasErrors('email')} or (${campoErro} == 'email') ? 'error' : ''">
         <p th:if="${#fields.hasErrors('email')}" th:errors="*{email}" class="text-danger error-message"></p>
     </div>
     <div>
         <label>Senha</label>
         <input type="password" th:field="*{password}"
-               th:classappend="${#fields.hasErrors('password')} or (${campoErro} == 'password') ? 'error' : ''" />
+               th:classappend="${#fields.hasErrors('password')} or (${campoErro} == 'password') ? 'error' : ''"/>
 
         <p th:if="${#fields.hasErrors('password')}" th:errors="*{password}" class="text-danger error-message"></p>
     </div>
@@ -34,6 +35,9 @@
         <a th:href="@{/forgot-password}">Esqueci minha senha</a>
     </div>
 </form>
+<div>
+    <a th:href="@{/oauth2/authorization/google}">Entrar com Google</a>
+</div>
 <div th:replace="~{fragmentLinks :: links}"></div>
 </body>
 <script th:replace="~{fragmentErros :: inputErro}"></script>

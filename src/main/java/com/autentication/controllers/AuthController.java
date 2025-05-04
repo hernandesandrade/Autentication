@@ -14,10 +14,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
 import org.springframework.security.web.savedrequest.SavedRequest;
@@ -25,8 +22,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Collections;
 
 @Controller
 public class AuthController {
@@ -75,7 +70,8 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public String logar(@RequestParam(name = "g-recaptcha-response", required = false) String recaptchaResponse, @Valid LoginDTO loginDTO, BindingResult result,
+    public String logar(@RequestParam(name = "g-recaptcha-response", required = false) String recaptchaResponse,
+                        @Valid LoginDTO loginDTO, BindingResult result,
                         HttpServletResponse response, HttpServletRequest request, Model model) {
         try {
             if (result.hasErrors()) {
@@ -88,7 +84,7 @@ public class AuthController {
             }
             if (userService.getUserSession(request) == null) {
                 User user = userService.getUserByEmail(loginDTO.email());
-                if (passwordEncoder.matches(loginDTO.password(), user.getPassword())) {
+                if (passwordEncoder.matches(loginDTO.password(), user.getPassword()) && !loginDTO.password().isEmpty()) {
                     request.getSession().setAttribute("userLogado", new UserDTO(user.getName(), user.getEmail(), user.isAtivo()));
                     String token = tokenService.generateToken(user);
                     Cookie cookie = new Cookie("auth_token", token);
