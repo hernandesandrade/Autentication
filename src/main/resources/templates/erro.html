@@ -1,12 +1,11 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <title>Erro interno</title>
+    <title>Erro</title>
 </head>
 <body>
-  <h1>Erro interno</h1>
-  <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
-  <a th:href="${voltarUrl}">Voltar à página anterior</a>
+<h1>Ocorreu um erro</h1>
+<p th:if="${mensagem}" th:text="${mensagem}">Página não encontrada</p>
+<h2 th:unless="${mensagem}">Página não encontrada</h2>
 </body>
 </html>
